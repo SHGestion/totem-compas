@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>¿Cómo estuvo hoy? · Compas Marine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===================== MARCA ===================== */
+:root{
+  --marca:#902632;      /* rojo vino Compas Marine */
+  --pizarra:#2e3940;    /* gris pizarra Compas Marine */
+  --linea:#e3e4e5;
+  --fondo:#f4f5f6;
+  --feliz:#2e9e6a;
+  --neutra:#e5a500;
+  --triste:#d64545;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--fondo);color:var(--pizarra);font-family:"Montserrat",system-ui,sans-serif;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column}
+.band{height:14px;flex:none;background:linear-gradient(105deg,var(--marca) 0 80%,var(--pizarra) 80.2% 100%)}
+.top{flex:none;display:flex;align-items:center;justify-content:space-between;padding:18px 32px;background:#fff;border-bottom:1px solid var(--linea)}
+.top img{height:48px}
+.top .lugar{font-weight:700;font-size:.95rem;color:#6b767d;text-transform:uppercase;letter-spacing:.08em}
+main{flex:1;display:grid;place-items:center;padding:24px;position:relative}
+.pantalla{width:100%;max-width:1100px;text-align:center;display:none;animation:entra .35s ease}
+.pantalla.activa{display:block}
+@keyframes entra{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.saludo{font-size:clamp(1rem,2.2vw,1.35rem);font-weight:700;color:var(--marca);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px}
+.pregunta{font-size:clamp(1.8rem,4.6vw,3.3rem);font-weight:800;line-height:1.15;margin:0 auto 6vh;max-width:950px}
+.caras{display:flex;justify-content:center;gap:clamp(18px,5vw,70px)}
+.cara{border:0;background:#fff;border-radius:28px;padding:clamp(16px,2.6vw,30px) clamp(14px,2.4vw,28px) clamp(12px,2vw,22px);
+  box-shadow:0 6px 22px rgba(46,57,64,.10);cursor:pointer;transition:transform .15s, box-shadow .15s;font:inherit;color:inherit;
+  width:clamp(150px,24vw,260px)}
+.cara svg{width:100%;height:auto;display:block}
+.cara span{display:block;margin-top:12px;font-weight:700;font-size:clamp(1rem,2.1vw,1.4rem)}
+.cara:active{transform:scale(.95)}
+.cara.elegida{transform:scale(1.07);box-shadow:0 0 0 6px currentColor,0 10px 28px rgba(0,0,0,.15)}
+.cara.apagada{opacity:.35}
+.cara.feliz{color:var(--feliz)} .cara.neutra{color:var(--neutra)} .cara.triste{color:var(--triste)}
+.cara span{color:var(--pizarra)}
+.opcion{border:0;background:#fff;border-radius:28px;box-shadow:0 6px 22px rgba(46,57,64,.10);cursor:pointer;font:inherit;color:var(--marca);
+  width:clamp(170px,26vw,280px);padding:clamp(20px,3vw,34px) 16px;transition:transform .15s, box-shadow .15s;position:relative}
+.opcion svg{width:clamp(70px,9vw,110px);height:auto}
+.opcion .num{position:absolute;top:14px;right:20px;font-size:1.6rem;font-weight:800;color:var(--pizarra)}
+.opcion span{display:block;margin-top:14px;font-weight:800;font-size:clamp(1.25rem,2.6vw,1.8rem);color:var(--pizarra)}
+.opcion:active{transform:scale(.95)}
+.opcion.elegida{transform:scale(1.06);box-shadow:0 0 0 6px var(--marca),0 10px 28px rgba(0,0,0,.15)}
+.opcion.apagada{opacity:.35}
+.puntos{display:flex;gap:10px;justify-content:center;margin-top:6vh}
+.puntos i{width:12px;height:12px;border-radius:50%;background:var(--linea)}
+.puntos i.on{background:var(--marca)}
+.gracias svg{width:clamp(110px,16vw,170px);color:var(--feliz)}
+.gracias h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;margin:20px 0 8px}
+.gracias p{font-size:clamp(1.05rem,2.2vw,1.45rem);color:#6b767d;margin:0}
+.pie{flex:none;text-align:center;font-size:.8rem;color:#8a949a;padding:10px 16px 14px}
+.admin{position:absolute;inset:auto 16px 16px auto;background:var(--pizarra);color:#fff;border-radius:12px;padding:12px 16px;font-size:.85rem;display:none;text-align:left}
+.admin.on{display:block}
+@media (orientation:portrait){ .caras{flex-direction:column;align-items:center} .opcion{width:min(60vw,320px)} .cara{width:min(60vw,320px);display:flex;align-items:center;gap:20px;padding:14px 24px} .cara svg{width:90px} .cara span{margin:0;font-size:1.4rem} .pregunta{margin-bottom:4vh} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="band"></div>
+  <div class="top">
+    <img id="logo" src="https://compasmarine.cl/wp-content/uploads/Compas-Marine.png" alt="Compas Marine" onerror="this.style.visibility='hidden'">
+    <div class="lugar" id="lugarTxt"></div>
+  </div>
+
+  <main>
+    <section class="pantalla activa" id="pPregunta">
+      <p class="saludo" id="saludo"></p>
+      <h1 class="pregunta" id="pregunta"></h1>
+      <div class="caras" id="caras"></div>
+      <div class="puntos" id="puntos"></div>
+    </section>
+
+    <section class="pantalla gracias" id="pGracias">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+      <h1>¡Gracias por su opinión!</h1>
+      <p>Nos ayuda a mejorar cada día.</p>
+    </section>
+
+    <div class="admin" id="admin"></div>
+  </main>
+  <div class="pie">Servicio de alimentación operado por SH Gestión y Servicios SpA</div>
+</div>
+
+<script>
+/* ===================== CONFIGURACIÓN ===================== */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbxvH9l_kWY_vA8Am8ULBPncSPepU6SCxW-WT6DSoGTKQS6VYVQcKiguDIVsJqRkl44w/exec";   // URL /exec del Apps Script del kiosco
+const PREGUNTAS_AL_AZAR = 1;                     // después de la elección y la pregunta general
+const SEG_GRACIAS = 4;                           // segundos en la pantalla de gracias
+const SEG_INACTIVO = 15;                         // si nadie toca a mitad de encuesta, se guarda lo respondido y se reinicia
+
+// Lugar: ?lugar=Corporativo (por defecto Corporativo)
+const LUGAR = new URLSearchParams(location.search).get("lugar") || "Corporativo";
+
+/* Banco de preguntas. La general va siempre primero; del resto se sacan al azar. */
+const ELECCION = {k:"eleccion", l:"¿Cuál fue su elección de hoy?", opciones:["Menú 1","Menú 2","Hipocalórico"]};
+const GENERAL = {k:"general", l:"¿Cómo estuvo su {servicio}?"};
+const BANCO = [
+  {k:"sabor",        l:"¿Qué le pareció el sabor de las preparaciones?"},
+  {k:"temperatura",  l:"¿La comida estaba a buena temperatura?"},
+  {k:"porcion",      l:"¿Quedó conforme con el tamaño de la porción?"},
+  {k:"variedad",     l:"¿Qué le parece la variedad del menú?"},
+  {k:"ensaladas",    l:"¿Cómo estaban las ensaladas y frutas?"},
+  {k:"presentacion", l:"¿Cómo evalúa la presentación de los platos?"},
+  {k:"atencion",     l:"¿Cómo fue la atención del personal?"},
+  {k:"rapidez",      l:"¿Cómo estuvo el tiempo de espera en la fila?"},
+  {k:"limpieza",     l:"¿Cómo encontró la limpieza del comedor?"},
+  {k:"vajilla",      l:"¿La vajilla y los cubiertos estaban limpios?"},
+  {k:"postre",       l:"¿Qué le pareció el postre?"},
+  {k:"opciones",     l:"¿Encontró opciones que se ajustan a lo que busca?"}
+];
+
+const CARAS = [
+  {v:3, k:"Feliz",  c:"feliz",  t:"Bien"},
+  {v:2, k:"Neutra", c:"neutra", t:"Regular"},
+  {v:1, k:"Triste", c:"triste", t:"Mal"}
+];
+
+/* ===================== Lógica ===================== */
+const $ = s => document.querySelector(s);
+let sesion = null, inactivo = null, bloqueado = false;
+
+function servicioActual(d = new Date()){
+  return d.getHours() < 17 ? "Almuerzo" : "Cena";   // solo se evalúan almuerzo y cena
+}
+function articulo(s){ return s === "Cena" ? "cena" : "almuerzo"; }
+
+function nuevaSesion(){
+  const pool = BANCO.slice();
+  for (let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const servicio = servicioActual();
+  sesion = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    servicio,
+    preguntas: [ELECCION, GENERAL].concat(pool.slice(0, PREGUNTAS_AL_AZAR)),
+    eleccion: "",
+    paso: 0,
+    respuestas: []
+  };
+  mostrarPregunta();
+}
+
+function caraSVG(tipo){
+  const boca = { feliz:"M30 60 Q50 80 70 60", neutra:"M32 64 L68 64", triste:"M30 70 Q50 52 70 70" }[tipo];
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="currentColor" opacity=".14"/>
+    <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+    <circle cx="35" cy="40" r="6" fill="currentColor"/><circle cx="65" cy="40" r="6" fill="currentColor"/>
+    <path d="${boca}" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>`;
+}
+
+function mostrarPregunta(){
+  const q = sesion.preguntas[sesion.paso];
+  const inicio = sesion.paso === 0;
+  $("#saludo").textContent = inicio ? "Su opinión es importante" : `Pregunta ${sesion.paso + 1} de ${sesion.preguntas.length}`;
+  $("#pregunta").textContent = q.l.replace("{servicio}", articulo(sesion.servicio));
+  const caras = $("#caras"); caras.innerHTML = "";
+  if (q.opciones){
+    q.opciones.forEach(op => {
+      const b = document.createElement("button");
+      b.className = "opcion"; b.type = "button";
+      b.innerHTML = `${iconoMenu(op)}<span>${op}</span>`;
+      b.addEventListener("click", () => elegirMenu(op, b));
+      caras.appendChild(b);
+    });
+  } else CARAS.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "cara " + c.c; b.type = "button";
+    b.innerHTML = caraSVG(c.c) + `<span>${c.t}</span>`;
+    b.addEventListener("click", () => responder(c, b));
+    caras.appendChild(b);
+  });
+  // puntos de avance solo una vez iniciada la encuesta
+  $("#puntos").innerHTML = inicio ? "" : sesion.preguntas.map((_, i) => `<i class="${i <= sesion.paso ? "on" : ""}"></i>`).join("");
+  mostrar("pPregunta");
+  bloqueado = false;
+  reiniciarInactividad(!inicio);
+}
+
+function iconoMenu(op){
+  if (op === "Hipocalórico") return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 38C10 20 22 10 38 10c0 16-10 28-28 28z"/><path d="M10 38L28 20"/></svg>`;
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="26" r="13"/><circle cx="24" cy="26" r="7"/><path d="M6 8v12M10 8v12M6 20h4M8 20v20M42 8c-4 2-5 8-5 13h5v19"/></svg><b class="num">${op.slice(-1)}</b>`;
+}
+
+function elegirMenu(op, boton){
+  if (bloqueado) return;
+  bloqueado = true;
+  document.querySelectorAll(".opcion").forEach(x => x.classList.add(x === boton ? "elegida" : "apagada"));
+  sesion.eleccion = op;
+  setTimeout(() => { sesion.paso++; mostrarPregunta(); }, 400);
+}
+
+function responder(c, boton){
+  if (bloqueado) return;
+  bloqueado = true;
+  document.querySelectorAll(".cara").forEach(x => x.classList.add(x === boton ? "elegida" : "apagada"));
+  const q = sesion.preguntas[sesion.paso];
+  sesion.respuestas.push({ k:q.k, pregunta: q.k === "general" ? "General: ¿Cómo estuvo su almuerzo / cena?" : q.l, respuesta:c.k, valor:c.v, ts:new Date().toISOString() });
+  setTimeout(() => {
+    sesion.paso++;
+    if (sesion.paso < sesion.preguntas.length) mostrarPregunta();
+    else terminar();
+  }, 450);
+}
+
+function terminar(){
+  clearTimeout(inactivo);
+  guardar(sesion);
+  sesion = null;
+  mostrar("pGracias");
+  setTimeout(nuevaSesion, SEG_GRACIAS * 1000);
+}
+
+function reiniciarInactividad(activa){
+  clearTimeout(inactivo);
+  if (!activa) return;
+  inactivo = setTimeout(() => {           // se fue sin terminar: se guarda lo respondido
+    if (sesion && sesion.respuestas.length) guardar(sesion);
+    nuevaSesion();
+  }, SEG_INACTIVO * 1000);
+}
+
+function mostrar(id){
+  document.querySelectorAll(".pantalla").forEach(p => p.classList.toggle("activa", p.id === id));
+}
+
+/* ===================== Envío con cola sin conexión ===================== */
+const COLA = "kiosco_cola";
+function leerCola(){ try{ return JSON.parse(localStorage.getItem(COLA) || "[]"); }catch(e){ return []; } }
+function escribirCola(l){ try{ localStorage.setItem(COLA, JSON.stringify(l)); }catch(e){} }
+
+function guardar(s){
+  const paquete = { lugar:LUGAR, sesion:s.id, servicio:s.servicio, eleccion:s.eleccion, respuestas:s.respuestas };
+  const cola = leerCola(); cola.push(paquete); escribirCola(cola);
+  vaciarCola();
+}
+
+let enviando = false;
+async function vaciarCola(){
+  if (enviando || !navigator.onLine || ENDPOINT.startsWith("PEGAR")) return;
+  enviando = true;
+  let cola = leerCola();
+  while (cola.length){
+    try{
+      await fetch(ENDPOINT, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(cola[0]) });
+      cola.shift(); escribirCola(cola);
+    }catch(e){ break; }
+  }
+  enviando = false;
+}
+window.addEventListener("online", vaciarCola);
+setInterval(vaciarCola, 60 * 1000);
+
+/* ===================== Tablet en modo tótem ===================== */
+// Pantalla siempre encendida (si el navegador lo permite)
+let wake = null;
+async function mantenerEncendida(){ try{ if ("wakeLock" in navigator) wake = await navigator.wakeLock.request("screen"); }catch(e){} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") mantenerEncendida(); });
+// Pantalla completa al primer toque
+document.addEventListener("click", () => {
+  mantenerEncendida();
+  const el = document.documentElement;
+  if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+}, { once:true });
+
+// Panel de control oculto: 5 toques rápidos sobre el logo
+let toques = 0, tToques = null;
+$("#logo").addEventListener("click", () => {
+  toques++; clearTimeout(tToques); tToques = setTimeout(() => toques = 0, 1500);
+  if (toques >= 5){
+    toques = 0;
+    const a = $("#admin");
+    a.innerHTML = `Lugar: <b>${LUGAR}</b><br>Pendientes por enviar: <b>${leerCola().length}</b><br>Conexión: <b>${navigator.onLine ? "Sí" : "No"}</b>`;
+    a.classList.add("on"); vaciarCola();
+    setTimeout(() => a.classList.remove("on"), 6000);
+  }
+});
+
+$("#lugarTxt").textContent = LUGAR;
+nuevaSesion();
+vaciarCola();
+</script>
+</body>
+</html>
