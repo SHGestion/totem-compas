@@ -55,6 +55,8 @@ main{flex:1;display:grid;place-items:center;padding:24px;position:relative}
 .opcion svg{width:clamp(70px,9vw,110px);height:auto}
 .opcion .num{position:absolute;top:14px;right:20px;font-size:1.6rem;font-weight:800;color:var(--pizarra)}
 .opcion span{display:block;margin-top:14px;font-weight:800;font-size:clamp(1.25rem,2.6vw,1.8rem);color:var(--pizarra)}
+.opcion em{display:block;margin-top:10px;font-style:normal;font-weight:700;font-size:clamp(.8rem,1.5vw,1rem);letter-spacing:.1em;text-transform:uppercase;color:var(--marca)}
+.opcion .plato{margin-top:6px;font-size:clamp(1.05rem,2.1vw,1.45rem);line-height:1.2;min-height:2.4em;display:flex;align-items:center;justify-content:center}
 .opcion:active{transform:scale(.95)}
 .opcion.elegida{transform:scale(1.06);box-shadow:0 0 0 6px var(--marca),0 10px 28px rgba(0,0,0,.15)}
 .opcion.apagada{opacity:.35}
@@ -149,6 +151,7 @@ function nuevaSesion(){
     servicio,
     preguntas: [ELECCION, GENERAL].concat(pool.slice(0, PREGUNTAS_AL_AZAR)),
     eleccion: "",
+    plato: "",
     paso: 0,
     respuestas: []
   };
@@ -174,7 +177,10 @@ function mostrarPregunta(){
     q.opciones.forEach(op => {
       const b = document.createElement("button");
       b.className = "opcion"; b.type = "button";
-      b.innerHTML = `${iconoMenu(op)}<span>${op}</span>`;
+      const plato = platoDe(op);
+      b.innerHTML = plato
+        ? `${iconoMenu(op, true)}<em>${op}</em><span class="plato">${plato}</span>`
+        : `${iconoMenu(op)}<span>${op}</span>`;
       b.addEventListener("click", () => elegirMenu(op, b));
       caras.appendChild(b);
     });
@@ -192,9 +198,9 @@ function mostrarPregunta(){
   reiniciarInactividad(!inicio);
 }
 
-function iconoMenu(op){
+function iconoMenu(op, conPlato){
   if (op === "Hipocalórico") return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 38C10 20 22 10 38 10c0 16-10 28-28 28z"/><path d="M10 38L28 20"/></svg>`;
-  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="26" r="13"/><circle cx="24" cy="26" r="7"/><path d="M6 8v12M10 8v12M6 20h4M8 20v20M42 8c-4 2-5 8-5 13h5v19"/></svg><b class="num">${op.slice(-1)}</b>`;
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="26" r="13"/><circle cx="24" cy="26" r="7"/><path d="M6 8v12M10 8v12M6 20h4M8 20v20M42 8c-4 2-5 8-5 13h5v19"/></svg>${conPlato ? "" : `<b class="num">${op.slice(-1)}</b>`}`;
 }
 
 function elegirMenu(op, boton){
@@ -202,6 +208,7 @@ function elegirMenu(op, boton){
   bloqueado = true;
   document.querySelectorAll(".opcion").forEach(x => x.classList.add(x === boton ? "elegida" : "apagada"));
   sesion.eleccion = op;
+  sesion.plato = platoDe(op);
   setTimeout(() => { sesion.paso++; mostrarPregunta(); }, 400);
 }
 
@@ -239,13 +246,42 @@ function mostrar(id){
   document.querySelectorAll(".pantalla").forEach(p => p.classList.toggle("activa", p.id === id));
 }
 
+/* ===================== Minuta (nombre de los platos) ===================== */
+// Se descarga de la hoja "Minuta" de la planilla y queda guardada en el tablet.
+const MINUTA_KEY = "kiosco_minuta";
+let MINUTA = {};
+try{ MINUTA = JSON.parse(localStorage.getItem(MINUTA_KEY) || "{}"); }catch(e){}
+
+function hoyISO(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function platoDe(op){
+  const fila = MINUTA[hoyISO() + "|" + servicioActual()];
+  if (!fila) return "";
+  return fila[ELECCION.opciones.indexOf(op)] || "";
+}
+async function actualizarMinuta(){
+  if (!navigator.onLine || ENDPOINT.startsWith("PEGAR")) return;
+  try{
+    const r = await fetch(ENDPOINT + "?accion=minuta", { cache:"no-store" });
+    const j = await r.json();
+    if (j && j.ok && j.minuta){
+      MINUTA = j.minuta;
+      try{ localStorage.setItem(MINUTA_KEY, JSON.stringify(MINUTA)); }catch(e){}
+      if (sesion && sesion.paso === 0 && !bloqueado) mostrarPregunta();   // refresca la pantalla de inicio
+    }
+  }catch(e){}
+}
+setInterval(actualizarMinuta, 30 * 60 * 1000);
+
 /* ===================== Envío con cola sin conexión ===================== */
 const COLA = "kiosco_cola";
 function leerCola(){ try{ return JSON.parse(localStorage.getItem(COLA) || "[]"); }catch(e){ return []; } }
 function escribirCola(l){ try{ localStorage.setItem(COLA, JSON.stringify(l)); }catch(e){} }
 
 function guardar(s){
-  const paquete = { lugar:LUGAR, sesion:s.id, servicio:s.servicio, eleccion:s.eleccion, respuestas:s.respuestas };
+  const paquete = { lugar:LUGAR, sesion:s.id, servicio:s.servicio, eleccion:s.eleccion, plato:s.plato || "", respuestas:s.respuestas };
   const cola = leerCola(); cola.push(paquete); escribirCola(cola);
   vaciarCola();
 }
@@ -294,6 +330,7 @@ $("#logo").addEventListener("click", () => {
 $("#lugarTxt").textContent = LUGAR;
 nuevaSesion();
 vaciarCola();
+actualizarMinuta();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
