@@ -69,7 +69,26 @@ main{flex:1;display:grid;place-items:center;padding:24px;position:relative}
 .pie{flex:none;text-align:center;font-size:.8rem;color:#8a949a;padding:10px 16px 14px}
 .admin{position:absolute;inset:auto 16px 16px auto;background:var(--pizarra);color:#fff;border-radius:12px;padding:12px 16px;font-size:.85rem;display:none;text-align:left}
 .admin.on{display:block}
-@media (orientation:portrait){ .caras{flex-direction:column;align-items:center} .opcion{width:min(60vw,320px)} .cara{width:min(60vw,320px);display:flex;align-items:center;gap:20px;padding:14px 24px} .cara svg{width:90px} .cara span{margin:0;font-size:1.4rem} .pregunta{margin-bottom:4vh} }
+@media (orientation:portrait){
+  .top{padding:12px 20px}
+  .top img{height:clamp(34px,5vh,46px);max-width:58%;object-fit:contain}
+  .top .lugar{font-size:.8rem}
+  main{display:flex;flex-direction:column;padding:3vh 20px;overflow-y:auto}
+  .pantalla.activa{margin:auto 0}
+  .pregunta{font-size:clamp(1.6rem,6.5vw,2.6rem);margin-bottom:3.5vh}
+  .caras{flex-direction:column;align-items:center;gap:2vh}
+  .opcion{width:min(92vw,620px);display:flex;align-items:center;gap:22px;text-align:left;padding:2.2vh 26px}
+  .opcion svg{width:clamp(52px,12vw,76px);flex:none}
+  .opcion .txt{flex:1}
+  .opcion em{margin-top:0}
+  .opcion .plato{justify-content:flex-start;min-height:0;font-size:clamp(1.1rem,4.4vw,1.6rem)}
+  .opcion span{margin-top:4px}
+  .opcion .num{top:50%;transform:translateY(-50%);right:24px}
+  .cara{width:min(92vw,620px);display:flex;align-items:center;gap:24px;padding:2vh 28px}
+  .cara svg{width:clamp(70px,15vw,100px);flex:none}
+  .cara span{margin:0;font-size:clamp(1.3rem,5vw,1.8rem)}
+  .puntos{margin-top:3vh}
+}
 </style>
 </head>
 <body>
@@ -179,8 +198,8 @@ function mostrarPregunta(){
       b.className = "opcion"; b.type = "button";
       const plato = platoDe(op);
       b.innerHTML = plato
-        ? `${iconoMenu(op, true)}<em>${op}</em><span class="plato">${plato}</span>`
-        : `${iconoMenu(op)}<span>${op}</span>`;
+        ? `${iconoMenu(op, true)}<div class="txt"><em>${op}</em><span class="plato">${plato}</span></div>`
+        : `${iconoMenu(op)}<div class="txt"><span>${op}</span></div>`;
       b.addEventListener("click", () => elegirMenu(op, b));
       caras.appendChild(b);
     });
