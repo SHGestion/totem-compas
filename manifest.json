@@ -1,0 +1,13 @@
+{
+  "name": "Tótem de satisfacción · Compas Marine",
+  "short_name": "Tótem Compas",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#f4f5f6",
+  "theme_color": "#902632",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
